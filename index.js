@@ -32,6 +32,15 @@ async function run() {
     const moviesCollection = database.collection("movies");
     const usersCollection = database.collection("users");
     const favoriteMoveCollection = database.collection("favorite-movie");
+
+    app.get("/", (req, res) => {
+      res.send("Hello World!");
+    });
+    app.post("/movie", async (req, res) => {
+      const movieData = req.body;
+      const result = await moviesCollection.insertOne(movieData);
+      res.send(result);
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
