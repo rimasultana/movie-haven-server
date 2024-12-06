@@ -56,6 +56,13 @@ async function run() {
       const result = await favoriteMoveCollection.insertOne(favMovieData);
       res.send(result);
     });
+    app.get("/fav-movie/:email", async (req, res) => {
+      const userEmail = req.params.email;
+      const result = await favoriteMoveCollection
+        .find({ email: userEmail })
+        .toArray();
+      res.send(result);
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
