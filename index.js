@@ -30,7 +30,6 @@ async function run() {
     );
     const database = client.db("movie-portal");
     const moviesCollection = database.collection("movies");
-    const usersCollection = database.collection("users");
     const favoriteMoveCollection = database.collection("favorite-movie");
 
     app.get("/", (req, res) => {
@@ -51,6 +50,11 @@ async function run() {
         _id: new ObjectId(movieId),
       });
       res.send(movies);
+    });
+    app.post("/fav-movie", async (req, res) => {
+      const favMovieData = req.body;
+      const result = await favoriteMoveCollection.insertOne(favMovieData);
+      res.send(result);
     });
   } finally {
     // Ensures that the client will close when you finish/error
