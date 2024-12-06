@@ -41,6 +41,10 @@ async function run() {
       const result = await moviesCollection.insertOne(movieData);
       res.send(result);
     });
+    app.get("/movie", async (req, res) => {
+      const movies = await moviesCollection.find().toArray();
+      res.send(movies);
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
