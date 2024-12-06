@@ -28,6 +28,10 @@ async function run() {
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
+    const database = client.db("movie-portal");
+    const moviesCollection = database.collection("movies");
+    const usersCollection = database.collection("users");
+    const favoriteMoveCollection = database.collection("favorite-movie");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
