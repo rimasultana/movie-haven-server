@@ -51,6 +51,13 @@ async function run() {
       });
       res.send(movies);
     });
+    app.delete("/movie/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await moviesCollection.deleteOne({
+        _id: new ObjectId(id),
+      });
+      res.send(result);
+    });
     app.post("/fav-movie", async (req, res) => {
       const favMovieData = req.body;
       const result = await favoriteMoveCollection.insertOne(favMovieData);
