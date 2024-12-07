@@ -1,11 +1,13 @@
 const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const morgan = require("morgan");
 const app = express();
 const port = 5000;
 
 app.use(cors());
 app.use(express.json());
+app.use(morgan("dev"));
 
 const uri =
   "mongodb+srv://movie-side:Teznr2ewfpP6UjgS@cluster0.4hbah.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
@@ -60,6 +62,16 @@ async function run() {
     });
     app.post("/fav-movie", async (req, res) => {
       const favMovieData = req.body;
+
+      const existingMovie = await moviesCollection.updateOne(
+        { _id: new ObjectId(favMovieData._id) },
+        {
+          $set: { isFavorite: true },
+        }
+      );
+
+      console.log(existingMovie);
+
       const result = await favoriteMoveCollection.insertOne(favMovieData);
       res.send(result);
     });
