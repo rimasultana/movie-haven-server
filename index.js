@@ -31,10 +31,6 @@ async function run() {
     const database = client.db("movie-portal");
     const moviesCollection = database.collection("movies");
     const favoriteMoveCollection = database.collection("favorite-movie");
-    await favoriteMoveCollection.createIndex(
-      { _id: 1, email: 1 },
-      { unique: true }
-    );
 
     app.get("/", (req, res) => {
       res.send("Hello World!");
@@ -45,7 +41,12 @@ async function run() {
       res.send(result);
     });
     app.get("/movie", async (req, res) => {
-      const movies = await moviesCollection.find().toArray();
+      const limit = req.query.limit;
+      const movies = await moviesCollection
+        .find()
+        .sort({ rating: -1 })
+        .limit(parseInt(limit))
+        .toArray();
       res.send(movies);
     });
     app.get("/movie/:id", async (req, res) => {
@@ -55,6 +56,18 @@ async function run() {
       });
       res.send(movies);
     });
+    app.put("/movie/:id", async (req, res) => {
+      const movieId = req.params.id;
+      const updatedData = req.body;
+
+      const result = await moviesCollection.updateOne(
+        { _id: new ObjectId(movieId) },
+        {
+          $set: updatedData,
+        }
+      );
+      res.send(result);
+    });
     app.delete("/movie/:id", async (req, res) => {
       const id = req.params.id;
       const result = await moviesCollection.deleteOne({
@@ -63,25 +76,36 @@ async function run() {
       res.send(result);
     });
     app.post("/fav-movie", async (req, res) => {
-      const favMovieData = req.body;
-      const { _id, email } = favMovieData;
+      try {
+        const favMovieData = req.body;
+        const { _id, email } = favMovieData;
+        favMovieData.movieId = _id;
+        delete favMovieData._id;
+        const existingFavorite = await favoriteMoveCollection.findOne({
+          movieId: _id,
+          email,
+        });
 
-      // Check if the favorite movie already exists for the user
-      const existingFavorite = await favoriteMoveCollection.findOne({
-        _id,
-        email,
-      });
+        if (existingFavorite) {
+          return res
+            .status(400)
+            .send({ error: "This movie is already in your favorites!" });
+        }
 
-      if (existingFavorite) {
-        res
-          .status(400)
-          .send({ error: "This movie is already in your favorites!" });
-        return;
+        const result = await favoriteMoveCollection.insertOne(favMovieData);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
       }
-
-      const result = await favoriteMoveCollection.insertOne(favMovieData);
+    });
+    app.delete("/fav-movie/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await favoriteMoveCollection.deleteOne({
+        _id: new ObjectId(id),
+      });
       res.send(result);
     });
+
     app.get("/fav-movie/:email", async (req, res) => {
       const userEmail = req.params.email;
       const result = await favoriteMoveCollection
