@@ -31,6 +31,10 @@ async function run() {
     const database = client.db("movie-portal");
     const moviesCollection = database.collection("movies");
     const favoriteMoveCollection = database.collection("favorite-movie");
+    await favoriteMoveCollection.createIndex(
+      { _id: 1, email: 1 },
+      { unique: true }
+    );
 
     app.get("/", (req, res) => {
       res.send("Hello World!");
@@ -60,15 +64,20 @@ async function run() {
     });
     app.post("/fav-movie", async (req, res) => {
       const favMovieData = req.body;
+      const { _id, email } = favMovieData;
 
-      const existingMovie = await moviesCollection.updateOne(
-        { _id: new ObjectId(favMovieData._id) },
-        {
-          $set: { isFavorite: true },
-        }
-      );
+      // Check if the favorite movie already exists for the user
+      const existingFavorite = await favoriteMoveCollection.findOne({
+        _id,
+        email,
+      });
 
-      console.log(existingMovie);
+      if (existingFavorite) {
+        res
+          .status(400)
+          .send({ error: "This movie is already in your favorites!" });
+        return;
+      }
 
       const result = await favoriteMoveCollection.insertOne(favMovieData);
       res.send(result);
